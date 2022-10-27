@@ -10,14 +10,19 @@ defmodule ReqTelemetry do
   @default_opts %{adapter: true, pipeline: true}
   @no_emit_opts %{adapter: false, pipeline: false}
 
-  @events [
-    [:req, :request, :pipeline, :start],
+  @adapter_events [
     [:req, :request, :adapter, :start],
     [:req, :request, :adapter, :stop],
-    [:req, :request, :adapter, :error],
+    [:req, :request, :adapter, :error]
+  ]
+
+  @pipeline_events [
+    [:req, :request, :pipeline, :start],
     [:req, :request, :pipeline, :stop],
     [:req, :request, :pipeline, :error]
   ]
+
+  @all_events @adapter_events ++ @pipeline_events
 
   @doc """
   Installs request, response, and error steps that emit `:telemetry` events.
@@ -34,18 +39,22 @@ defmodule ReqTelemetry do
 
   ## Usage
 
-      req = Req.new() |> ReqTelemetry.attach()
-      # %Req.Request{options: %{telemetry: [pipeline: true, adapter: true]}}
+  All events are emitted by default, but can be limited using options passed to the request.
 
+      req = Req.new() |> ReqTelemetry.attach()
+
+      # Emits all events
       Req.get!(req, url: "https://example.org")
 
       # Do not emit events
       Req.get!(req, url: "https://example.org", telemetry: false)
 
-      # Do not emit pipeline events
+      # Emit adapter events but not pipeline events
       Req.get!(req, url: "https://example.org", telemetry: [pipeline: false])
 
-      # By default, do not emit events
+  You may also choose to suppress all events by default, enabling them for those requests that
+  you wish to be instrumented.
+
       req = Req.new() |> ReqTelemetry.attach(false)
 
       # Will not emit events
@@ -56,6 +65,16 @@ defmodule ReqTelemetry do
 
       # Override to emit only adapter events
       Req.get!(req, url: "https://example.org", telemetry: [adapter: true])
+
+  Finally, you could suppress a certain type of event by default and re-enable them when needed.
+
+      req = Req.new() |> ReqTelemetry.attach(pipeline: false)
+
+      # Will only emit adapter events
+      Req.get!(req, url: "https://example.org")
+
+      # Override to emit only pipeline events
+      Req.get!(req, url: "https://example.org", telemetry: [pipeline: true, adapter: false])
 
   """
   @spec attach(Req.Request.t(), options) :: Req.Request.t()
@@ -82,36 +101,51 @@ defmodule ReqTelemetry do
   end
 
   @doc """
-  Returns a list of all events emitted by `ReqTelemetry`.
+  Returns a list of events emitted by `ReqTelemetry`.
   """
-  def events, do: @events
+  @spec events(:all | :pipeline | :adapter) :: [:telemetry.event_name(), ...]
+  def events(kind \\ :all)
+  def events(:all), do: @all_events
+  def events(:pipeline), do: @pipeline_events
+  def events(:adapter), do: @adapter_events
 
   @doc """
   Basic telemetry event handler that logs `ReqTelemetry` events.
 
-  By default, only the following events are logged. This can be configured by passing in a
-  different list of events.
+  All events are logged by default, but this can be overriden by passing in a keyword describing
+  the kind of events to log or a list of specific events to log.
 
-    * `[:req, :request, :adapter, :start]`
-    * `[:req, :request, :adapter, :stop]`
-    * `[:req, :request, :pipeline, :error]`
+      # Logs all events
+      ReqTelemetry.attach_default_logger()
 
-  Example of a successful request:
+      # Logs only adapter events
+      ReqTelemetry.attach_default_logger(:adapter)
+
+      # Logs only pipeline errors
+      ReqTelemetry.attach_default_logger([[:req, :request, :pipeline, :error]])
+
+  Example of a logged request:
 
       Req:479128347 - GET https://example.org (adapter)
       Req:479128347 - 200 in 403ms (adapter)
 
   """
-  @default_logged_events [
-    [:req, :request, :adapter, :start],
-    [:req, :request, :adapter, :stop],
-    [:req, :request, :pipeline, :error]
-  ]
-  @spec attach_default_logger() :: :ok | {:error, :already_exists}
-  def attach_default_logger(events \\ @default_logged_events) do
-    unless events -- @events == [] do
+  @spec attach_default_logger(:all | :adapter | :pipeline | [:telemetry.event_name(), ...]) ::
+          :ok | {:error, :already_exists}
+  def attach_default_logger(kind_or_events \\ :all)
+
+  def attach_default_logger(kind) when is_atom(kind) do
+    kind
+    |> events()
+    |> attach_default_logger()
+  end
+
+  def attach_default_logger(events) when is_list(events) do
+    unknown_events = events -- @all_events
+
+    unless unknown_events == [] do
       raise ArgumentError, """
-      cannot attach ReqTelemetry logger to unknown events: #{inspect(events -- @events)}
+      cannot attach ReqTelemetry logger to unknown events: #{inspect(unknown_events)}
       """
     end
 
