@@ -190,7 +190,7 @@ defmodule ReqTelemetryTest do
 
       refute_received {:telemetry, [:req, :request, _, _], _, _}
 
-      assert message =~ "[warning]"
+      assert message =~ "[warning]" || message =~ "[warn]"
       assert message =~ ":unknown"
     end
 
