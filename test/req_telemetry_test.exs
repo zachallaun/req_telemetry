@@ -1,6 +1,5 @@
 defmodule ReqTelemetryTest do
   use ExUnit.Case
-  doctest ReqTelemetry
 
   import ExUnit.CaptureLog
 
@@ -87,7 +86,11 @@ defmodule ReqTelemetryTest do
         )
       end
 
-      %{mock_req: mock_req}
+      mock_error = fn error ->
+        Req.new(url: @default_url, adapter: fn request -> {request, error} end)
+      end
+
+      %{mock_req: mock_req, mock_error: mock_error}
     end
 
     test "are emitted at the start and end of a request", %{mock_req: req} do
@@ -189,6 +192,21 @@ defmodule ReqTelemetryTest do
 
       assert message =~ "[warning]"
       assert message =~ ":unknown"
+    end
+
+    test "include a :duration measurement and :error metadata for :error events", %{
+      mock_error: req
+    } do
+      error = Finch.Error.exception(:request_timeout)
+
+      assert {:error, _} =
+               req.(error)
+               |> Req.Request.merge_options(retry: :never)
+               |> ReqTelemetry.attach()
+               |> Req.get()
+
+      assert_received {:telemetry, [:req, :request, _, :error], %{duration: d}, %{error: ^error}}
+                      when is_integer(d)
     end
   end
 end
