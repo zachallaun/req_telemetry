@@ -102,15 +102,15 @@ defmodule ReqTelemetry do
   """
   @spec attach(Req.Request.t(), options) :: Req.Request.t()
   def attach(%Req.Request{} = req, opts \\ @default_opts) do
-    default_opts =
+    initial_opts =
       case normalize_opts(opts) do
-        {:ok, opts} -> opts
+        {:ok, opts} -> Map.merge(@default_opts, opts)
         {:error, opts} -> options_error!(opts)
       end
 
     req
     |> Req.Request.register_options([:telemetry])
-    |> Req.Request.merge_options(telemetry: default_opts)
+    |> Req.Request.put_private(:telemetry, %{initial_opts: initial_opts})
     # Pipeline events occur at start of request and end of response/error
     |> Req.Request.prepend_request_steps(pipeline_start: &emit_start(&1, :pipeline))
     |> Req.Request.append_response_steps(pipeline_stop: &emit_stop(&1, :pipeline))
@@ -166,16 +166,27 @@ defmodule ReqTelemetry do
   end
 
   @doc false
-  def telemetry_setup(%Req.Request{options: options} = req) do
-    req = Req.Request.put_private(req, :telemetry, %{ref: make_ref()})
+  def telemetry_setup(%Req.Request{} = req) do
+    private = Req.Request.get_private(req, :telemetry)
+    req = Req.Request.put_private(req, :telemetry, Map.put(private, :ref, make_ref()))
 
-    case options |> Map.get(:telemetry, true) |> normalize_opts() do
+    case fetch_options(req) do
       {:ok, opts} ->
         Req.Request.merge_options(req, telemetry: opts)
 
       {:error, opts} ->
         Logger.warn(options_error(opts) <> "\nEvents will not be emitted.")
         Req.Request.merge_options(req, telemetry: @no_emit_opts)
+    end
+  end
+
+  @doc false
+  def fetch_options(%Req.Request{options: options} = req) do
+    initial_opts = req |> Req.Request.get_private(:telemetry) |> Map.fetch!(:initial_opts)
+
+    case options |> Map.get(:telemetry, %{}) |> normalize_opts() do
+      {:ok, opts} -> {:ok, Map.merge(initial_opts, opts)}
+      {:error, opts} -> {:error, opts}
     end
   end
 
@@ -243,13 +254,16 @@ defmodule ReqTelemetry do
   end
 
   defp normalize_opts(opts) when is_map(opts) do
-    case Map.keys(opts) -- [:adapter, :pipeline] do
-      [] -> {:ok, Map.merge(@default_opts, opts)}
-      _ -> {:error, opts}
-    end
+    if valid_opts?(opts), do: {:ok, opts}, else: {:error, opts}
   end
 
   defp normalize_opts(opts), do: {:error, opts}
+
+  defp valid_opts?(opts) when is_map(opts) do
+    Map.keys(opts) -- [:adapter, :pipeline] == []
+  end
+
+  defp valid_opts?(_), do: false
 
   defp options_error!(opts) do
     raise ArgumentError, options_error(opts)
