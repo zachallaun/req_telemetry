@@ -31,9 +31,9 @@ defmodule ReqTelemetry do
 
   Events can be suppressed on a per-request basis using the `:telemetry` option:
 
-    * `telemetry: false` - do not emit telemetry events
-    * `telemetry: [pipeline: false]` - do not emit pipeline telemetry events
-    * `telemetry: [adapter: false]` - do not emit adapter telemetry events
+    * `false` - do not emit telemetry events
+    * `[pipeline: false]` - do not emit pipeline telemetry events
+    * `[adapter: false]` - do not emit adapter telemetry events
 
   These options can also be passed to `attach/2` to set default behavior.
 
