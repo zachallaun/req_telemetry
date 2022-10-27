@@ -4,7 +4,7 @@
 
 <!-- MDOC !-->
 
-`Req` plugin to instrument requests with `:telemetry` events.
+[`Req`](https://hexdocs.pm/req) plugin to instrument requests with `:telemetry` events.
 
 ## Usage
 
