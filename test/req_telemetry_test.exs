@@ -120,5 +120,61 @@ defmodule ReqTelemetryTest do
       assert_received {:telemetry, [:req, :request, :adapter, _], _, _}
       refute_received {:telemetry, [:req, :request, :pipeline, _], _, _}
     end
+
+    test "include a :time measurement for :start events", %{mock_req: req} do
+      req.(%{}) |> ReqTelemetry.attach() |> Req.get!()
+
+      for _ <- 1..2 do
+        assert_received {:telemetry, [:req, :request, _, :start], %{time: ts}, _}
+                        when is_integer(ts)
+      end
+    end
+
+    test "include a :duration measurement for :stop events", %{mock_req: req} do
+      req.(%{}) |> ReqTelemetry.attach() |> Req.get!()
+
+      for _ <- 1..2 do
+        assert_received {:telemetry, [:req, :request, _, :stop], %{duration: d}, _}
+                        when is_integer(d)
+      end
+    end
+
+    test "include :url, :method, and :headers metadata for :start events", %{mock_req: req} do
+      req.(%{}) |> ReqTelemetry.attach() |> Req.post!()
+
+      for _ <- 1..2 do
+        assert_received {:telemetry, [:req, :request, _, :start], _,
+                         %{url: %URI{}, method: :post, headers: headers}}
+                        when is_list(headers)
+      end
+    end
+
+    test "include :url, :method, :status, :resp_headers metadata for :stop events", %{
+      mock_req: req
+    } do
+      resp_headers = [{"some", "header"}]
+      resp_status = 201
+
+      req.(%{headers: resp_headers, status: resp_status}) |> ReqTelemetry.attach() |> Req.post!()
+
+      for _ <- 1..2 do
+        assert_received {:telemetry, [:req, :request, _, :stop], _,
+                         %{
+                           url: %URI{},
+                           method: :post,
+                           resp_headers: ^resp_headers,
+                           status: ^resp_status
+                         }}
+      end
+    end
+
+    test "include a ref in metadata correlating :start and :stop events", %{mock_req: req} do
+      req.(%{}) |> ReqTelemetry.attach() |> Req.get!()
+
+      assert_received {:telemetry, [:req, :request, _, :start], _, %{ref: ref}}
+                      when is_reference(ref)
+
+      assert_received {:telemetry, [:req, :request, _, :stop], _, %{ref: ^ref}}
+    end
   end
 end
