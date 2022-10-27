@@ -43,6 +43,7 @@ defmodule ReqTelemetry.MixProject do
   defp deps do
     [
       {:req, "~> 0.3.0"},
+      {:telemetry, "~> 1.0"},
       {:ex_doc, ">= 0.0.0", only: :docs}
     ]
   end
