@@ -23,7 +23,7 @@ jobs:
               elixir: '1.14'
               otp: 25
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Elixir
         id: beam
@@ -33,7 +33,7 @@ jobs:
           elixir-version: ${{matrix.pair.elixir}}
 
       - name: Deps Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: deps
           key: mix-deps-${{ hashFiles('**/mix.lock') }}
