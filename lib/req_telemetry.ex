@@ -78,7 +78,7 @@ defmodule ReqTelemetry do
 
   """
   @spec attach(Req.Request.t(), options) :: Req.Request.t()
-  def attach(%Req.Request{} = req, opts \\ @default_opts) do
+  def attach(%Req.Request{} = req, opts \\ []) do
     initial_opts =
       case normalize_opts(opts) do
         {:ok, opts} -> Map.merge(@default_opts, opts)
