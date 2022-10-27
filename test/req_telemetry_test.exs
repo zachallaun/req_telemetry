@@ -26,5 +26,19 @@ defmodule ReqTelemetryTest do
       req = Req.new() |> ReqTelemetry.attach(false)
       assert %{telemetry: %{adapter: false, pipeline: false}} = req.options
     end
+
+    test "raises if given invalid options" do
+      invalid = [
+        [{"adapter", false}],
+        [unknown: true],
+        [adapter: false, unknown: true],
+        %{"adapter" => false},
+        :unknown
+      ]
+
+      for opts <- invalid do
+        assert_raise ArgumentError, fn -> Req.new() |> ReqTelemetry.attach(opts) end
+      end
+    end
   end
 end
