@@ -29,17 +29,18 @@ defmodule ReqTelemetry do
 
   ## Options
 
-  Events can be suppressed on a per-request basis using the `:telemetry` option:
+  All events are emitted by default, but can be limited using the following options:
 
     * `false` - do not emit telemetry events
     * `[pipeline: false]` - do not emit pipeline telemetry events
     * `[adapter: false]` - do not emit adapter telemetry events
 
-  These options can also be passed to `attach/2` to set default behavior.
+  These same options can also be passed through `Req` options under the `:telemetry` key to
+  change the behavior on a per-request basis.
 
   ## Examples
 
-  All events are emitted by default, but can be limited using options passed to the request.
+  Emit all events by default, limiting them per-request as needed.
 
       req = Req.new() |> ReqTelemetry.attach()
 
@@ -52,8 +53,7 @@ defmodule ReqTelemetry do
       # Emit adapter events but not pipeline events
       Req.get!(req, url: "https://example.org", telemetry: [pipeline: false])
 
-  You may also choose to suppress all events by default, enabling them for those requests that
-  you wish to be instrumented.
+  Suppress all events by default, enabling them per-request as needed.
 
       req = Req.new() |> ReqTelemetry.attach(false)
 
@@ -66,7 +66,7 @@ defmodule ReqTelemetry do
       # Override to emit only adapter events
       Req.get!(req, url: "https://example.org", telemetry: [adapter: true])
 
-  Finally, you could suppress a certain type of event by default and re-enable them when needed.
+  Finally, suppress only a certain kind of event by default, overriding that default as needed.
 
       req = Req.new() |> ReqTelemetry.attach(pipeline: false)
 
@@ -139,10 +139,19 @@ defmodule ReqTelemetry do
       # Logs only pipeline errors
       :ok = ReqTelemetry.attach_default_logger([[:req, :request, :pipeline, :error]])
 
-  Example of a logged request:
+  ## Example
 
-      Req:479128347 - GET https://example.org (adapter)
-      Req:479128347 - 200 in 403ms (adapter)
+  Here's what a successful request might look like:
+
+      15:52:01.462 [info] Req:479128347 - GET https://example.org (pipeline)
+      15:52:01.466 [info] Req:479128347 - GET https://example.org (adapter)
+      15:52:01.869 [info] Req:479128347 - 200 in 403ms (adapter)
+      15:52:01.875 [info] Req:479128347 - 200 in 413ms (pipeline)
+
+  And here's what an error might look like:
+
+      15:52:04.174 [error] Req:42446822 - ERROR in 2012ms (adapter)
+      %Finch.Error{reason: :request_timeout}
 
   """
   @spec attach_default_logger(:all | :adapter | :pipeline | [:telemetry.event_name(), ...]) ::
