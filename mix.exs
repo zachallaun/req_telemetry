@@ -23,7 +23,7 @@ defmodule ReqTelemetry.MixProject do
         extras: ["README.md"]
       ],
       package: [
-        description: "Req plugin for Telemetry",
+        description: "Req plugin to instrument requests with Telemetry events",
         licenses: ["MIT"],
         links: %{
           "GitHub" => @source_url

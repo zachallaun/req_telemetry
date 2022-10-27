@@ -29,6 +29,9 @@ processing the request and response, as well as the time spent only with the req
   * `[:req, :request, :pipeline, :stop]`
   * `[:req, :request, :pipeline, :error]`
 
+You can configure `ReqTelemetry` to produce only `:pipeline` or `:adapter` events; see
+`ReqTelemetry.attach/2` for options.
+
 ## Logging
 
 `ReqTelemetry` defines a default logger that can be used by adding the following to your
