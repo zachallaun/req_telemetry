@@ -2,6 +2,8 @@ defmodule ReqTelemetryTest do
   use ExUnit.Case
   doctest ReqTelemetry
 
+  import ExUnit.CaptureLog
+
   describe "attach/2" do
     test "merges default :telemetry options when none are specified" do
       req = Req.new() |> ReqTelemetry.attach()
@@ -175,6 +177,18 @@ defmodule ReqTelemetryTest do
                       when is_reference(ref)
 
       assert_received {:telemetry, [:req, :request, _, :stop], _, %{ref: ^ref}}
+    end
+
+    test "are not emitted if invalid options are given", %{mock_req: req} do
+      message =
+        capture_log(fn ->
+          req.(%{}) |> ReqTelemetry.attach() |> Req.get!(telemetry: :unknown)
+        end)
+
+      refute_received {:telemetry, [:req, :request, _, _], _, _}
+
+      assert message =~ "[warning]"
+      assert message =~ ":unknown"
     end
   end
 end
