@@ -1,4 +1,6 @@
-# ReqTelemetry
+[![Hex.pm](https://img.shields.io/hexpm/v/req_telemetry)](https://hex.pm/packages/req_telemetry)
+[![HexDocs.pm](https://img.shields.io/badge/hex.pm-docs-8e7ce6.svg)](https://hexdocs.pm/req_telemetry)
+[![CI](https://github.com/zachallaun/protean/actions/workflows/ci.yml/badge.svg)](https://github.com/zachallaun/req_telemetry/actions/workflows/ci.yml)
 
 <!-- MDOC !-->
 
@@ -49,13 +51,13 @@ For usage and configuration, see `ReqTelemetry.attach_default_logger/1`.
 
 ## Installation
 
-`req_telemetry` is not yet available through Hex. In the meantime, you can install
-it by adding the repository directly:
+`req_telemetry` is available through [hex.pm](https://hex.pm/packages/req_telemetry), and can be
+installed by adding the following to your list of dependencies:
 
 ```elixir
 def deps do
   [
-    {:req_telemetry, github: "zachallaun/req_telemetry"}
+    {:req_telemetry, "~> 0.0.1"}
   ]
 end
 ```
