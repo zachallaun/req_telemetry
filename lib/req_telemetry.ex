@@ -49,8 +49,8 @@ defmodule ReqTelemetry do
   @type options :: boolean() | [option]
   @type option :: {:adapter, boolean()} | {:pipeline, boolean()}
 
-  @default_opts [adapter: true, pipeline: true]
-  @no_emit_opts [adapter: false, pipeline: false]
+  @default_opts %{adapter: true, pipeline: true}
+  @no_emit_opts %{adapter: false, pipeline: false}
 
   @doc """
   Installs request, response, and error steps that emit `:telemetry` events.
@@ -215,13 +215,21 @@ defmodule ReqTelemetry do
   defp normalize_opts(false), do: {:ok, @no_emit_opts}
 
   defp normalize_opts(opts) when is_list(opts) do
-    with true <- Keyword.keyword?(opts),
-         {:ok, opts} <- Keyword.validate(opts, [:adapter, :pipeline]) do
-      {:ok, Keyword.merge(@default_opts, opts)}
+    if Keyword.keyword?(opts) do
+      normalize_opts(Map.new(opts))
     else
+      {:error, opts}
+    end
+  end
+
+  defp normalize_opts(opts) when is_map(opts) do
+    case Map.keys(opts) -- [:adapter, :pipeline] do
+      [] -> {:ok, Map.merge(@default_opts, opts)}
       _ -> {:error, opts}
     end
   end
+
+  defp normalize_opts(opts), do: {:error, opts}
 
   defp options_error!(opts) do
     raise ArgumentError, options_error(opts)
@@ -230,15 +238,13 @@ defmodule ReqTelemetry do
   defp options_error(opts) do
     """
     Invalid `ReqTelemetry` options. Valid options must be a boolean
-    or a keyword list containing `:adapter` and/or `:pipeline` keys.
+    or a keyword list/map containing `:adapter` and/or `:pipeline` keys.
 
     Got: #{inspect(opts)}
     """
   end
 
-  defp emit?(%{options: %{telemetry: opts}}, event) do
-    Keyword.get(opts, event)
-  end
+  defp emit?(%{options: %{telemetry: opts}}, event), do: opts[event]
 
   defp duration(req, event) do
     req
