@@ -1,48 +1,6 @@
 defmodule ReqTelemetry do
-  @moduledoc """
-  `Req` plugin to report `:telemetry` events.
-
-  ## Usage
-
-  Preferably, `ReqTelemetry` should be the last plugin attached to your `%Req.Request{}`. This
-  allows `ReqTelemetry` to emit events both at the very start and very end of the request and
-  response pipelines. In this way, you can observe both the total time spent issuing and
-  processing the request and response, as well as the time spent only with the request adapter.
-
-      req = Req.new() |> ReqTelemetry.attach()
-      req = Req.new(adapter: &my_adapter/1) |> ReqSomeOtherThing.attach() |> ReqTelemetry.attach()
-
-  See `attach/2` for additional options.
-
-  ## Events
-
-  `ReqTelemetry` produces the following events (in order of event dispatch):
-
-    * `[:req, :request, :pipeline, :start]`
-    * `[:req, :request, :adapter, :start]`
-    * `[:req, :request, :adapter, :stop]`
-    * `[:req, :request, :adapter, :error]`
-    * `[:req, :request, :pipeline, :stop]`
-    * `[:req, :request, :pipeline, :error]`
-
-  ## Logging
-
-  `ReqTelemetry` defines a default logger that can be used by adding the following to your
-  application's `start/2` callback:
-
-      @impl true
-      def start(_type, _args) do
-        ReqTelemetry.attach_default_logger()
-
-        children = [
-          ...
-        ]
-
-        Supervisor.start_link(...)
-      end
-
-  See `attach_default_logger/1` for options.
-  """
+  @external_resource "README.md"
+  @moduledoc "README.md" |> File.read!() |> String.split("<!-- MDOC !-->") |> Enum.fetch!(1)
 
   require Logger
 
