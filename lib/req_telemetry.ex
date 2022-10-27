@@ -37,7 +37,7 @@ defmodule ReqTelemetry do
 
   These options can also be passed to `attach/2` to set default behavior.
 
-  ## Usage
+  ## Examples
 
   All events are emitted by default, but can be limited using options passed to the request.
 
@@ -110,19 +110,34 @@ defmodule ReqTelemetry do
   def events(:adapter), do: @adapter_events
 
   @doc """
-  Basic telemetry event handler that logs `ReqTelemetry` events.
+  Attach a basic telemetry event handler that logs `ReqTelemetry` events.
+
+  ## Usage
+
+  Telemetry event handlers can be attached in your application's `start/2` callback:
+
+      @impl true
+      def start(_type, _args) do
+        ReqTelemetry.attach_default_logger()
+
+        children = [
+          ...
+        ]
+
+        Supervisor.start_link(...)
+      end
 
   All events are logged by default, but this can be overriden by passing in a keyword describing
   the kind of events to log or a list of specific events to log.
 
       # Logs all events
-      ReqTelemetry.attach_default_logger()
+      :ok = ReqTelemetry.attach_default_logger()
 
       # Logs only adapter events
-      ReqTelemetry.attach_default_logger(:adapter)
+      :ok = ReqTelemetry.attach_default_logger(:adapter)
 
       # Logs only pipeline errors
-      ReqTelemetry.attach_default_logger([[:req, :request, :pipeline, :error]])
+      :ok = ReqTelemetry.attach_default_logger([[:req, :request, :pipeline, :error]])
 
   Example of a logged request:
 

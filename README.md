@@ -34,21 +34,16 @@ You can configure `ReqTelemetry` to produce only `:pipeline` or `:adapter` event
 
 ## Logging
 
-`ReqTelemetry` defines a default logger that can be used by adding the following to your
-application's `start/2` callback:
+`ReqTelemetry` defines a a simple, default logger that logs basic request information and timing.
 
-    @impl true
-    def start(_type, _args) do
-      ReqTelemetry.attach_default_logger()
+Here's how a successful request might be logged:
 
-      children = [
-        ...
-      ]
+    Req:479128347 - GET https://example.org (pipeline)
+    Req:479128347 - GET https://example.org (adapter)
+    Req:479128347 - 200 in 403ms (adapter)
+    Req:479128347 - 200 in 413ms (pipeline)
 
-      Supervisor.start_link(...)
-    end
-
-See `ReqTelemetry.attach_default_logger/1` for options.
+For usage and configuration, see `ReqTelemetry.attach_default_logger/1`.
 
 <!-- MDOC !-->
 
