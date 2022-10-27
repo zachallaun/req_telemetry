@@ -41,4 +41,12 @@ defmodule ReqTelemetryTest do
       end
     end
   end
+
+  describe "attach_default_logger/1" do
+    test "raises if given unknown events" do
+      assert_raise ArgumentError, fn ->
+        ReqTelemetry.attach_default_logger([:unknown, :event])
+      end
+    end
+  end
 end

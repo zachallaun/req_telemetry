@@ -52,6 +52,15 @@ defmodule ReqTelemetry do
   @default_opts %{adapter: true, pipeline: true}
   @no_emit_opts %{adapter: false, pipeline: false}
 
+  @events [
+    [:req, :request, :pipeline, :start],
+    [:req, :request, :adapter, :start],
+    [:req, :request, :adapter, :stop],
+    [:req, :request, :adapter, :error],
+    [:req, :request, :pipeline, :stop],
+    [:req, :request, :pipeline, :error]
+  ]
+
   @doc """
   Installs request, response, and error steps that emit `:telemetry` events.
 
@@ -115,6 +124,11 @@ defmodule ReqTelemetry do
   end
 
   @doc """
+  Returns a list of all events emitted by `ReqTelemetry`.
+  """
+  def events, do: @events
+
+  @doc """
   Basic telemetry event handler that logs `ReqTelemetry` events.
 
   By default, only the following events are logged. This can be configured by passing in a
@@ -137,6 +151,12 @@ defmodule ReqTelemetry do
   ]
   @spec attach_default_logger() :: :ok | {:error, :already_exists}
   def attach_default_logger(events \\ @default_logged_events) do
+    unless events -- @events == [] do
+      raise ArgumentError, """
+      cannot attach ReqTelemetry logger to unknown events: #{inspect(events -- @events)}
+      """
+    end
+
     :telemetry.attach_many(
       "req-telemetry-handler",
       events,
