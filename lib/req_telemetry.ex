@@ -7,8 +7,8 @@ defmodule ReqTelemetry do
   @type options :: boolean() | [option]
   @type option :: {:adapter, boolean()} | {:pipeline, boolean()} | {:metadata, map()}
 
-  @default_opts %{adapter: true, pipeline: true, metadata: %{}}
-  @no_emit_opts %{adapter: false, pipeline: false, metadata: %{}}
+  @default_opts %{adapter: true, pipeline: true, metadata: nil}
+  @no_emit_opts %{adapter: false, pipeline: false, metadata: nil}
 
   @adapter_events [
     [:req, :request, :adapter, :start],
@@ -88,7 +88,7 @@ defmodule ReqTelemetry do
         {:error, opts} -> options_error!(opts)
       end
 
-    initial_opts = Map.put_new(initial_opts, :metadata, %{})
+    initial_opts = Map.put_new(initial_opts, :metadata, nil)
 
     req
     |> Req.Request.register_options([:telemetry])
