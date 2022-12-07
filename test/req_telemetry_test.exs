@@ -154,6 +154,16 @@ defmodule ReqTelemetryTest do
       end
     end
 
+    test "allows metadata to be sent with :start events", %{mock_req: req} do
+      req.(%{}) |> ReqTelemetry.attach(metadata: %{foo: "bar"}) |> Req.post!()
+
+      for _ <- 1..2 do
+        assert_received {:telemetry, [:req, :request, _, :start], _,
+                         %{url: %URI{}, method: :post, headers: headers, metadata: %{foo: "bar"}}}
+                        when is_list(headers)
+      end
+    end
+
     test "include :url, :method, :status, :resp_headers metadata for :stop events", %{
       mock_req: req
     } do
@@ -169,6 +179,22 @@ defmodule ReqTelemetryTest do
                            method: :post,
                            resp_headers: ^resp_headers,
                            status: ^resp_status
+                         }}
+      end
+    end
+
+    test "allows metadata to be sent with :stop events", %{mock_req: req} do
+      resp_headers = [{"some", "header"}]
+      resp_status = 201
+
+      req.(%{headers: resp_headers, status: resp_status})
+      |> ReqTelemetry.attach(metadata: %{foo: "bar"})
+      |> Req.post!()
+
+      for _ <- 1..2 do
+        assert_received {:telemetry, [:req, :request, _, :stop], _,
+                         %{
+                           metadata: %{foo: "bar"}
                          }}
       end
     end
@@ -207,6 +233,18 @@ defmodule ReqTelemetryTest do
 
       assert_received {:telemetry, [:req, :request, _, :error], %{duration: d}, %{error: ^error}}
                       when is_integer(d)
+    end
+
+    test "allows metadata to be sent with :error events", %{mock_req: req} do
+      error = Finch.Error.exception(:request_timeout)
+
+      assert {:error, _} =
+               req.(error)
+               |> Req.Request.merge_options(retry: :never)
+               |> ReqTelemetry.attach(metadata: %{foo: "bar"})
+               |> Req.get()
+
+      assert_received {:telemetry, [:req, :request, _, :error], _, %{metadata: %{foo: "bar"}}}
     end
   end
 end
