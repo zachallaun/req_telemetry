@@ -5,10 +5,10 @@ defmodule ReqTelemetry do
   require Logger
 
   @type options :: boolean() | [option]
-  @type option :: {:adapter, boolean()} | {:pipeline, boolean()}
+  @type option :: {:adapter, boolean()} | {:pipeline, boolean()} | {:metadata, map()}
 
-  @default_opts %{adapter: true, pipeline: true}
-  @no_emit_opts %{adapter: false, pipeline: false}
+  @default_opts %{adapter: true, pipeline: true, metadata: nil}
+  @no_emit_opts %{adapter: false, pipeline: false, metadata: nil}
 
   @adapter_events [
     [:req, :request, :adapter, :start],
@@ -34,6 +34,9 @@ defmodule ReqTelemetry do
     * `false` - do not emit telemetry events
     * `[pipeline: false]` - do not emit pipeline telemetry events
     * `[adapter: false]` - do not emit adapter telemetry events
+
+  The list of options can also take a metadata parameter. This will be passed thru with the emitted 
+  telemetry messages.
 
   These same options can also be passed through `Req` options under the `:telemetry` key to
   change the behavior on a per-request basis.
@@ -84,6 +87,8 @@ defmodule ReqTelemetry do
         {:ok, opts} -> Map.merge(@default_opts, opts)
         {:error, opts} -> options_error!(opts)
       end
+
+    initial_opts = Map.put_new(initial_opts, :metadata, nil)
 
     req
     |> Req.Request.register_options([:telemetry])
@@ -209,13 +214,13 @@ defmodule ReqTelemetry do
   @doc false
   def emit_start(req, event) do
     if emit?(req, event) do
-      %{ref: ref} = Req.Request.get_private(req, :telemetry)
+      %{ref: ref, initial_opts: %{metadata: metadata}} = Req.Request.get_private(req, :telemetry)
       %{url: url, method: method, headers: headers} = req
 
       :telemetry.execute(
         [:req, :request, event, :start],
         %{time: System.system_time()},
-        %{ref: ref, url: url, method: method, headers: headers}
+        %{ref: ref, url: url, method: method, headers: headers, metadata: metadata}
       )
 
       private = Req.Request.get_private(req, :telemetry, %{})
@@ -228,14 +233,21 @@ defmodule ReqTelemetry do
   @doc false
   def emit_stop({req, resp}, event) do
     if emit?(req, event) do
-      %{ref: ref} = Req.Request.get_private(req, :telemetry)
+      %{ref: ref, initial_opts: %{metadata: metadata}} = Req.Request.get_private(req, :telemetry)
       %{url: url, method: method} = req
       %{status: status, headers: headers} = resp
 
       :telemetry.execute(
         [:req, :request, event, :stop],
         %{duration: duration(req, event)},
-        %{ref: ref, url: url, method: method, status: status, resp_headers: headers}
+        %{
+          ref: ref,
+          url: url,
+          method: method,
+          status: status,
+          resp_headers: headers,
+          metadata: metadata
+        }
       )
     end
 
@@ -245,13 +257,20 @@ defmodule ReqTelemetry do
   @doc false
   def emit_error({req, exception}, event) do
     if emit?(req, event) do
-      %{ref: ref} = Req.Request.get_private(req, :telemetry)
+      %{ref: ref, initial_opts: %{metadata: metadata}} = Req.Request.get_private(req, :telemetry)
       %{url: url, method: method, headers: headers} = req
 
       :telemetry.execute(
         [:req, :request, event, :error],
         %{duration: duration(req, event)},
-        %{ref: ref, url: url, method: method, headers: headers, error: exception}
+        %{
+          ref: ref,
+          url: url,
+          method: method,
+          headers: headers,
+          error: exception,
+          metadata: metadata
+        }
       )
     end
 
@@ -276,7 +295,7 @@ defmodule ReqTelemetry do
   defp normalize_opts(opts), do: {:error, opts}
 
   defp valid_opts?(opts) when is_map(opts) do
-    Map.keys(opts) -- [:adapter, :pipeline] == []
+    Map.keys(opts) -- [:adapter, :pipeline, :metadata] == []
   end
 
   defp valid_opts?(_), do: false
