@@ -158,9 +158,30 @@ defmodule ReqTelemetryTest do
       req.(%{}) |> ReqTelemetry.attach(metadata: %{foo: "bar"}) |> Req.post!()
 
       for _ <- 1..2 do
+        assert_received {:telemetry, [:req, :request, _, :start], _, %{metadata: %{foo: "bar"}}}
+      end
+
+      req.(%{}) |> ReqTelemetry.attach() |> Req.post!(telemetry: [metadata: %{foo: "bar"}])
+
+      for _ <- 1..2 do
+        assert_received {:telemetry, [:req, :request, _, :start], _, %{metadata: %{foo: "bar"}}}
+      end
+
+      req.(%{})
+      |> ReqTelemetry.attach(metadata: %{foo: "bar"})
+      |> Req.post!(telemetry: [metadata: %{baz: "buzz"}])
+
+      for _ <- 1..2 do
         assert_received {:telemetry, [:req, :request, _, :start], _,
-                         %{url: %URI{}, method: :post, headers: headers, metadata: %{foo: "bar"}}}
-                        when is_list(headers)
+                         %{metadata: %{foo: "bar", baz: "buzz"}}}
+      end
+
+      req.(%{})
+      |> ReqTelemetry.attach(metadata: %{foo: "bar"})
+      |> Req.post!(telemetry: [metadata: %{foo: "buzz"}])
+
+      for _ <- 1..2 do
+        assert_received {:telemetry, [:req, :request, _, :start], _, %{metadata: %{foo: "buzz"}}}
       end
     end
 
@@ -183,19 +204,21 @@ defmodule ReqTelemetryTest do
       end
     end
 
-    test "allows metadata to be sent with :stop events", %{mock_req: req} do
-      resp_headers = [{"some", "header"}]
-      resp_status = 201
-
-      req.(%{headers: resp_headers, status: resp_status})
+    test "allows attach metadata to be sent with :stop events", %{mock_req: req} do
+      req.(%{})
       |> ReqTelemetry.attach(metadata: %{foo: "bar"})
       |> Req.post!()
 
       for _ <- 1..2 do
-        assert_received {:telemetry, [:req, :request, _, :stop], _,
-                         %{
-                           metadata: %{foo: "bar"}
-                         }}
+        assert_received {:telemetry, [:req, :request, _, :stop], _, %{metadata: %{foo: "bar"}}}
+      end
+
+      req.(%{})
+      |> ReqTelemetry.attach()
+      |> Req.post!(telemetry: [metadata: %{foo: "bar"}])
+
+      for _ <- 1..2 do
+        assert_received {:telemetry, [:req, :request, _, :stop], _, %{metadata: %{foo: "bar"}}}
       end
     end
 
@@ -235,7 +258,7 @@ defmodule ReqTelemetryTest do
                       when is_integer(d)
     end
 
-    test "allows metadata to be sent with :error events", %{mock_req: req} do
+    test "allows attach metadata to be sent with :error events", %{mock_req: req} do
       error = Finch.Error.exception(:request_timeout)
 
       assert {:error, _} =
@@ -243,6 +266,14 @@ defmodule ReqTelemetryTest do
                |> Req.Request.merge_options(retry: :never)
                |> ReqTelemetry.attach(metadata: %{foo: "bar"})
                |> Req.get()
+
+      assert_received {:telemetry, [:req, :request, _, :error], _, %{metadata: %{foo: "bar"}}}
+
+      assert {:error, _} =
+               req.(error)
+               |> Req.Request.merge_options(retry: :never)
+               |> ReqTelemetry.attach()
+               |> Req.get(telemetry: [metadata: %{foo: "bar"}])
 
       assert_received {:telemetry, [:req, :request, _, :error], _, %{metadata: %{foo: "bar"}}}
     end

@@ -29,17 +29,31 @@ defmodule ReqTelemetry do
 
   ## Options
 
-  All events are emitted by default, but can be limited using the following options:
+    * `:pipeline` (default `true`) - emit pipeline telemetry events
+    * `:adapter` (default `true`) - emit adapter telemetry events
+    * `:metadata` (default `nil`) - map of user-supplied metadata available in telemetry handlers
 
-    * `false` - do not emit telemetry events
-    * `[pipeline: false]` - do not emit pipeline telemetry events
-    * `[adapter: false]` - do not emit adapter telemetry events
-
-  The list of options can also take a metadata parameter. This will be passed thru with the emitted 
-  telemetry messages.
+  As a shortcut, all events can be suppressed by passing `false` instead of an options list.
 
   These same options can also be passed through `Req` options under the `:telemetry` key to
-  change the behavior on a per-request basis.
+  change the behavior on a per-request basis. Maps of metadata will be merged. For example:
+
+      req = Req.new() |> ReqTelemetry.attach(metadata: %{api_version: 1})
+
+      Req.get!(req,
+        url: "https://api.example.org/endpoint",
+        telemetry: [metadata: %{endpoint: "endpoint"}]
+      )
+
+      # Your telemetry event handler will have access to the merged map
+      def handle_event(
+        [:req, _, _, _],
+        _measurements,
+        %{metadata: %{api_version: v, endpoint: e}},
+        _config
+      ) do
+        # ...
+      end
 
   ## Examples
 
@@ -206,24 +220,26 @@ defmodule ReqTelemetry do
     initial_opts = req |> Req.Request.get_private(:telemetry) |> Map.fetch!(:initial_opts)
 
     case options |> Map.get(:telemetry, %{}) |> normalize_opts() do
-      {:ok, opts} -> {:ok, Map.merge(initial_opts, opts)}
+      {:ok, opts} -> {:ok, Map.merge(initial_opts, opts, &merge_opt/3)}
       {:error, opts} -> {:error, opts}
     end
   end
 
+  defp merge_opt(:metadata, %{} = left, %{} = right), do: Map.merge(left, right)
+  defp merge_opt(_key, _left, right), do: right
+
   @doc false
   def emit_start(req, event) do
     if emit?(req, event) do
-      %{ref: ref, initial_opts: %{metadata: metadata}} = Req.Request.get_private(req, :telemetry)
+      %{ref: ref} = private = Req.Request.get_private(req, :telemetry)
       %{url: url, method: method, headers: headers} = req
 
       :telemetry.execute(
         [:req, :request, event, :start],
         %{time: System.system_time()},
-        %{ref: ref, url: url, method: method, headers: headers, metadata: metadata}
+        %{ref: ref, url: url, method: method, headers: headers, metadata: metadata(req)}
       )
 
-      private = Req.Request.get_private(req, :telemetry, %{})
       Req.Request.put_private(req, :telemetry, Map.put(private, event, monotonic_time()))
     else
       req
@@ -233,7 +249,7 @@ defmodule ReqTelemetry do
   @doc false
   def emit_stop({req, resp}, event) do
     if emit?(req, event) do
-      %{ref: ref, initial_opts: %{metadata: metadata}} = Req.Request.get_private(req, :telemetry)
+      %{ref: ref} = Req.Request.get_private(req, :telemetry)
       %{url: url, method: method} = req
       %{status: status, headers: headers} = resp
 
@@ -246,7 +262,7 @@ defmodule ReqTelemetry do
           method: method,
           status: status,
           resp_headers: headers,
-          metadata: metadata
+          metadata: metadata(req)
         }
       )
     end
@@ -257,7 +273,7 @@ defmodule ReqTelemetry do
   @doc false
   def emit_error({req, exception}, event) do
     if emit?(req, event) do
-      %{ref: ref, initial_opts: %{metadata: metadata}} = Req.Request.get_private(req, :telemetry)
+      %{ref: ref} = Req.Request.get_private(req, :telemetry)
       %{url: url, method: method, headers: headers} = req
 
       :telemetry.execute(
@@ -269,13 +285,16 @@ defmodule ReqTelemetry do
           method: method,
           headers: headers,
           error: exception,
-          metadata: metadata
+          metadata: metadata(req)
         }
       )
     end
 
     {req, exception}
   end
+
+  defp metadata(%{options: %{telemetry: %{metadata: metadata}}}), do: metadata
+  defp metadata(_req), do: nil
 
   defp normalize_opts(true), do: {:ok, @default_opts}
   defp normalize_opts(false), do: {:ok, @no_emit_opts}
