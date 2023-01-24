@@ -55,8 +55,8 @@ defmodule ReqTelemetry.Logger do
     |> to_string()
   end
 
-  defp format_duration(milliseconds) do
-    [to_string(milliseconds), "ms"]
+  defp format_duration(microseconds) do
+    [to_string(round(microseconds / 1000)), "ms"]
   end
 
   defp format_method(method), do: method |> to_string() |> String.upcase()

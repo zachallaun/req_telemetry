@@ -335,16 +335,14 @@ defmodule ReqTelemetry do
   defp emit?(%{options: %{telemetry: opts}}, event), do: opts[event]
 
   defp duration(req, event) do
-    stop = monotonic_time()
-
     req
     |> Req.Request.get_private(:telemetry, %{})
     |> Map.get(event)
     |> case do
       nil -> nil
-      start -> stop - start
+      start -> monotonic_time() - start
     end
   end
 
-  defp monotonic_time, do: System.monotonic_time()
+  defp monotonic_time, do: System.monotonic_time(:microsecond)
 end
