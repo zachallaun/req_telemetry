@@ -230,6 +230,8 @@ defmodule ReqTelemetry do
 
   @doc false
   def emit_start(req, event) do
+    start_time = System.monotonic_time()
+
     if emit?(req, event) do
       %{ref: ref} = private = Req.Request.get_private(req, :telemetry)
       %{url: url, method: method, headers: headers} = req
@@ -240,7 +242,7 @@ defmodule ReqTelemetry do
         %{ref: ref, url: url, method: method, headers: headers, metadata: metadata(req)}
       )
 
-      Req.Request.put_private(req, :telemetry, Map.put(private, event, monotonic_time()))
+      Req.Request.put_private(req, :telemetry, Map.put(private, event, start_time))
     else
       req
     end
@@ -248,6 +250,8 @@ defmodule ReqTelemetry do
 
   @doc false
   def emit_stop({req, resp}, event) do
+    stop_time = System.monotonic_time()
+
     if emit?(req, event) do
       %{ref: ref} = Req.Request.get_private(req, :telemetry)
       %{url: url, method: method} = req
@@ -255,7 +259,7 @@ defmodule ReqTelemetry do
 
       :telemetry.execute(
         [:req, :request, event, :stop],
-        %{duration: duration(req, event)},
+        %{duration: duration(req, event, stop_time)},
         %{
           ref: ref,
           url: url,
@@ -272,13 +276,15 @@ defmodule ReqTelemetry do
 
   @doc false
   def emit_error({req, exception}, event) do
+    stop_time = System.monotonic_time()
+
     if emit?(req, event) do
       %{ref: ref} = Req.Request.get_private(req, :telemetry)
       %{url: url, method: method, headers: headers} = req
 
       :telemetry.execute(
         [:req, :request, event, :error],
-        %{duration: duration(req, event)},
+        %{duration: duration(req, event, stop_time)},
         %{
           ref: ref,
           url: url,
@@ -334,15 +340,13 @@ defmodule ReqTelemetry do
 
   defp emit?(%{options: %{telemetry: opts}}, event), do: opts[event]
 
-  defp duration(req, event) do
+  defp duration(req, event, stop_time) do
     req
     |> Req.Request.get_private(:telemetry, %{})
     |> Map.get(event)
     |> case do
       nil -> nil
-      start -> monotonic_time() - start
+      start_time -> stop_time - start_time
     end
   end
-
-  defp monotonic_time, do: System.monotonic_time(:microsecond)
 end
