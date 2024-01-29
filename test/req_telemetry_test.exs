@@ -150,7 +150,7 @@ defmodule ReqTelemetryTest do
       for _ <- 1..2 do
         assert_received {:telemetry, [:req, :request, _, :start], _,
                          %{url: %URI{}, method: :post, headers: headers}}
-                        when is_list(headers)
+                        when is_map(headers)
       end
     end
 
@@ -250,7 +250,7 @@ defmodule ReqTelemetryTest do
 
       assert {:error, _} =
                req.(error)
-               |> Req.Request.merge_options(retry: :never)
+               |> Req.Request.merge_options(retry: false)
                |> ReqTelemetry.attach()
                |> Req.get()
 
@@ -263,7 +263,7 @@ defmodule ReqTelemetryTest do
 
       assert {:error, _} =
                req.(error)
-               |> Req.Request.merge_options(retry: :never)
+               |> Req.Request.merge_options(retry: false)
                |> ReqTelemetry.attach(metadata: %{foo: "bar"})
                |> Req.get()
 
@@ -271,7 +271,7 @@ defmodule ReqTelemetryTest do
 
       assert {:error, _} =
                req.(error)
-               |> Req.Request.merge_options(retry: :never)
+               |> Req.Request.merge_options(retry: false)
                |> ReqTelemetry.attach()
                |> Req.get(telemetry: [metadata: %{foo: "bar"}])
 

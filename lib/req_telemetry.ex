@@ -210,7 +210,7 @@ defmodule ReqTelemetry do
         Req.Request.merge_options(req, telemetry: opts)
 
       {:error, opts} ->
-        Logger.warn(options_error(opts) <> "\nEvents will not be emitted.")
+        Logger.warning(options_error(opts) <> "\nEvents will not be emitted.")
         Req.Request.merge_options(req, telemetry: @no_emit_opts)
     end
   end
