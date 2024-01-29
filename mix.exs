@@ -18,10 +18,7 @@ defmodule ReqTelemetry.MixProject do
         docs: :docs,
         "hex.publish": :docs
       ],
-      docs: [
-        main: "ReqTelemetry",
-        extras: ["README.md"]
-      ],
+      docs: docs(),
       package: [
         description: "Req plugin to instrument requests with Telemetry events",
         licenses: ["MIT"],
@@ -44,7 +41,18 @@ defmodule ReqTelemetry.MixProject do
     [
       {:req, "~> 0.4.0"},
       {:telemetry, "~> 1.0"},
-      {:ex_doc, ">= 0.0.0", only: :docs}
+      {:ex_doc, ">= 0.31.0", only: :docs}
+    ]
+  end
+
+  defp docs do
+    [
+      source_url: @source_url,
+      main: "ReqTelemetry",
+      extras: [
+        "README.md": [title: "Overview"],
+        "CHANGELOG.md": [title: "Changelog"]
+      ]
     ]
   end
 end
