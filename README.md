@@ -57,7 +57,7 @@ installed by adding the following to your list of dependencies:
 ```elixir
 def deps do
   [
-    {:req_telemetry, "~> 0.0.3"}
+    {:req_telemetry, "~> 0.1.0"}
   ]
 end
 ```

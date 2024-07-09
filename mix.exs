@@ -2,7 +2,7 @@ defmodule ReqTelemetry.MixProject do
   use Mix.Project
 
   @name "ReqTelemetry"
-  @version "0.0.4"
+  @version "0.1.0"
   @source_url "https://github.com/zachallaun/req_telemetry"
 
   def project do
@@ -11,7 +11,7 @@ defmodule ReqTelemetry.MixProject do
       name: @name,
       version: @version,
       source_url: @source_url,
-      elixir: "~> 1.12",
+      elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       preferred_cli_env: [
