@@ -1,6 +1,6 @@
 [![Hex.pm](https://img.shields.io/hexpm/v/req_telemetry)](https://hex.pm/packages/req_telemetry)
 [![HexDocs.pm](https://img.shields.io/badge/hex.pm-docs-8e7ce6.svg)](https://hexdocs.pm/req_telemetry)
-[![CI](https://github.com/zachallaun/protean/actions/workflows/ci.yml/badge.svg)](https://github.com/zachallaun/req_telemetry/actions/workflows/ci.yml)
+[![CI](https://github.com/zachallaun/req_telemetry/actions/workflows/ci.yml/badge.svg)](https://github.com/zachallaun/req_telemetry/actions/workflows/ci.yml)
 
 <!-- MDOC !-->
 
@@ -63,4 +63,3 @@ def deps do
   ]
 end
 ```
-
