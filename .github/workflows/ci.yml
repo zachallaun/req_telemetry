@@ -14,22 +14,14 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: 1.13
-              otp: 24.3
+              elixir: 1.13.x
+              otp: 22.x
           - pair:
-              elixir: 1.14
-              otp: 25
-          - pair:
-              elixir: 1.15
-              otp: 25
-          - pair:
-              elixir: 1.16
-              otp: 26
-          - pair:
-              elixir: 1.17
-              otp: 27
+              elixir: 1.17.x
+              otp: 27.x
+              lint: true
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Elixir
         id: beam
@@ -39,12 +31,19 @@ jobs:
           elixir-version: ${{matrix.pair.elixir}}
 
       - name: Deps Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: deps
-          key: mix-deps-${{ hashFiles('**/mix.lock') }}
+          key: mix-otp-${{ matrix.pair.otp }}-deps-${{ hashFiles('**/mix.lock') }}
 
-      - run: mix deps.get
+      - run: mix deps.get --check-locked
+
+
+      - run: mix format --check-formatted
+        if: ${{ matrix.lint }}
+
+      - run: mix deps.unlock --check-unused
+        if: ${{ matrix.lint }}
 
       - run: mix deps.compile
 
