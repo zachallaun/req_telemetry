@@ -146,7 +146,7 @@ defmodule ReqTelemetry do
         Supervisor.start_link(...)
       end
 
-  All events are logged by default, but this can be overriden by passing in a keyword describing
+  All events are logged by default, but this can be overridden by passing in a keyword describing
   the kind of events to log or a list of specific events to log.
 
       # Logs all events

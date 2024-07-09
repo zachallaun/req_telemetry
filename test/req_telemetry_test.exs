@@ -111,7 +111,7 @@ defmodule ReqTelemetryTest do
       refute_received {:telemetry, [:req, :request, :pipeline, _], _, _}
     end
 
-    test "can be overriden with options passed to the request", %{mock_req: req} do
+    test "can be overridden with options passed to the request", %{mock_req: req} do
       req.(%{}) |> ReqTelemetry.attach() |> Req.get!(telemetry: false)
       refute_received {:telemetry, [:req, :request, _, _], _, _}
 
@@ -120,7 +120,7 @@ defmodule ReqTelemetryTest do
       refute_received {:telemetry, [:req, :request, :adapter, _], _, _}
     end
 
-    test "excluded in attach/1 can be overriden", %{mock_req: req} do
+    test "excluded in attach/1 can be overridden", %{mock_req: req} do
       req.(%{}) |> ReqTelemetry.attach(false) |> Req.get!(telemetry: [adapter: true])
       assert_received {:telemetry, [:req, :request, :adapter, _], _, _}
       refute_received {:telemetry, [:req, :request, :pipeline, _], _, _}
