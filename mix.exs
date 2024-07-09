@@ -39,7 +39,7 @@ defmodule ReqTelemetry.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:req, "~> 0.4.0"},
+      {:req, "~> 0.5.0"},
       {:telemetry, "~> 1.0"},
       {:ex_doc, ">= 0.31.0", only: :docs}
     ]
