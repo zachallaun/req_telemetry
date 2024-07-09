@@ -49,3 +49,5 @@ jobs:
       - run: mix deps.compile
 
       - run: mix test
+
+      - run: mix dialyzer
