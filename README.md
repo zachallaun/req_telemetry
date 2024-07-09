@@ -13,12 +13,14 @@ allows `ReqTelemetry` to emit events both at the very start and very end of the 
 response pipelines. In this way, you can observe both the total time spent issuing and
 processing the request and response, as well as the time spent only with the request adapter.
 
-    req = Req.new() |> ReqTelemetry.attach()
+```elixir
+req = Req.new() |> ReqTelemetry.attach()
 
-    req =
-      Req.new(adapter: &my_adapter/1)
-      |> ReqSomeOtherThing.attach()
-      |> ReqTelemetry.attach()
+req =
+  Req.new(adapter: &my_adapter/1)
+  |> ReqSomeOtherThing.attach()
+  |> ReqTelemetry.attach()
+```
 
 ## Events
 
