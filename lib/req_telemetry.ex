@@ -307,23 +307,21 @@ defmodule ReqTelemetry do
 
   defp normalize_opts(opts) when is_list(opts) do
     if Keyword.keyword?(opts) do
-      normalize_opts(Map.new(opts))
+      opts |> Map.new() |> normalize_opts()
     else
       {:error, opts}
     end
   end
 
   defp normalize_opts(opts) when is_map(opts) do
-    if valid_opts?(opts), do: {:ok, opts}, else: {:error, opts}
+    if Map.drop(opts, [:adapter, :pipeline, :metadata]) == %{} do
+      {:ok, opts}
+    else
+      {:error, opts}
+    end
   end
 
   defp normalize_opts(opts), do: {:error, opts}
-
-  defp valid_opts?(opts) when is_map(opts) do
-    Map.keys(opts) -- [:adapter, :pipeline, :metadata] == []
-  end
-
-  defp valid_opts?(_), do: false
 
   defp options_error!(opts) do
     raise ArgumentError, options_error(opts)

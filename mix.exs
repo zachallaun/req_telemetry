@@ -41,7 +41,8 @@ defmodule ReqTelemetry.MixProject do
     [
       {:req, "~> 0.5.0"},
       {:telemetry, "~> 1.0"},
-      {:ex_doc, ">= 0.31.0", only: :docs}
+      {:ex_doc, ">= 0.31.0", only: :docs},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 
