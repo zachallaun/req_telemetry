@@ -38,6 +38,7 @@ jobs:
 
       - run: mix deps.get --check-locked
 
+      - run: mix deps.compile
 
       - run: mix format --check-formatted
         if: ${{ matrix.lint }}
@@ -45,8 +46,7 @@ jobs:
       - run: mix deps.unlock --check-unused
         if: ${{ matrix.lint }}
 
-      - run: mix deps.compile
+      - run: mix dialyzer
+        if: ${{ matrix.lint }}
 
       - run: mix test
-
-      - run: mix dialyzer
