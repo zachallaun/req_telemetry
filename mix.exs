@@ -2,7 +2,7 @@ defmodule ReqTelemetry.MixProject do
   use Mix.Project
 
   @name "ReqTelemetry"
-  @version "0.1.0"
+  @version "0.1.1"
   @source_url "https://github.com/zachallaun/req_telemetry"
 
   def project do
