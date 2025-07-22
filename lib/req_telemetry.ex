@@ -234,12 +234,12 @@ defmodule ReqTelemetry do
 
     if emit?(req, event) do
       %{ref: ref} = private = Req.Request.get_private(req, :telemetry)
-      %{url: url, method: method, headers: headers} = req
+      %{method: method, headers: headers} = req
 
       :telemetry.execute(
         [:req, :request, event, :start],
         %{time: System.system_time()},
-        %{ref: ref, url: url, method: method, headers: headers, metadata: metadata(req)}
+        %{ref: ref, url: url(req), method: method, headers: headers, metadata: metadata(req)}
       )
 
       Req.Request.put_private(req, :telemetry, Map.put(private, event, start_time))
@@ -254,7 +254,7 @@ defmodule ReqTelemetry do
 
     if emit?(req, event) do
       %{ref: ref} = Req.Request.get_private(req, :telemetry)
-      %{url: url, method: method} = req
+      %{method: method} = req
       %{status: status, headers: headers} = resp
 
       :telemetry.execute(
@@ -262,7 +262,7 @@ defmodule ReqTelemetry do
         %{duration: duration(req, event, stop_time)},
         %{
           ref: ref,
-          url: url,
+          url: url(req),
           method: method,
           status: status,
           resp_headers: headers,
@@ -280,14 +280,14 @@ defmodule ReqTelemetry do
 
     if emit?(req, event) do
       %{ref: ref} = Req.Request.get_private(req, :telemetry)
-      %{url: url, method: method, headers: headers} = req
+      %{method: method, headers: headers} = req
 
       :telemetry.execute(
         [:req, :request, event, :error],
         %{duration: duration(req, event, stop_time)},
         %{
           ref: ref,
-          url: url,
+          url: url(req),
           method: method,
           headers: headers,
           error: exception,
@@ -345,6 +345,15 @@ defmodule ReqTelemetry do
     |> case do
       nil -> nil
       start_time -> stop_time - start_time
+    end
+  end
+
+  defp url(%Req.Request{} = req) do
+    case req.private do
+      %{path_params_template: template} ->
+        %{req.url | path: template}
+      _ ->
+        req.url
     end
   end
 end
