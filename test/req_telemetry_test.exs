@@ -204,6 +204,23 @@ defmodule ReqTelemetryTest do
       end
     end
 
+    test "contains template path", %{
+      mock_req: req
+    } do
+      req.(%{}) |> ReqTelemetry.attach() |> Req.get!(
+        url: "/:foo/bar",
+        path_params: [foo: 2137]
+      )
+
+      for _ <- 1..2 do
+        assert_received {:telemetry, [:req, :request, _, :stop], _,
+                         %{
+                           url: %URI{path: "/:foo/bar"},
+                           method: :get
+                         }}
+      end
+    end
+
     test "allows attach metadata to be sent with :stop events", %{mock_req: req} do
       req.(%{})
       |> ReqTelemetry.attach(metadata: %{foo: "bar"})
