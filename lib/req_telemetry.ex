@@ -239,7 +239,14 @@ defmodule ReqTelemetry do
       :telemetry.execute(
         [:req, :request, event, :start],
         %{time: System.system_time()},
-        %{ref: ref, url: url, method: method, headers: headers, metadata: metadata(req)}
+        %{
+          ref: ref,
+          url: url,
+          method: method,
+          headers: headers,
+          request: req,
+          metadata: metadata(req)
+        }
       )
 
       Req.Request.put_private(req, :telemetry, Map.put(private, event, start_time))
@@ -266,6 +273,8 @@ defmodule ReqTelemetry do
           method: method,
           status: status,
           resp_headers: headers,
+          request: req,
+          response: resp,
           metadata: metadata(req)
         }
       )
@@ -291,6 +300,7 @@ defmodule ReqTelemetry do
           method: method,
           headers: headers,
           error: exception,
+          request: req,
           metadata: metadata(req)
         }
       )

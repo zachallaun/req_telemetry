@@ -199,7 +199,9 @@ defmodule ReqTelemetryTest do
                            url: %URI{},
                            method: :post,
                            resp_headers: ^resp_headers,
-                           status: ^resp_status
+                           status: ^resp_status,
+                           request: %Req.Request{},
+                           response: %Req.Response{status: 201, body: ""}
                          }}
       end
     end
