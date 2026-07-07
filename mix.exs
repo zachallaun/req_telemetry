@@ -2,7 +2,7 @@ defmodule ReqTelemetry.MixProject do
   use Mix.Project
 
   @name "ReqTelemetry"
-  @version "0.1.1"
+  @version "0.1.2"
   @source_url "https://github.com/zachallaun/req_telemetry"
 
   def project do
@@ -39,7 +39,7 @@ defmodule ReqTelemetry.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:req, "~> 0.5.0"},
+      {:req, "~> 0.6"},
       {:telemetry, "~> 1.0"},
       {:ex_doc, ">= 0.31.0", only: :docs},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}

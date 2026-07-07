@@ -2,6 +2,12 @@
 
 This format is based on [Keep a Changelog](https://keepachangelog.com) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+  * Upgrade `req` to `~> 0.6` to resolve dependency vulnerabilities.
+
 ## v0.1.1 (2024-7-10)
 
 ### Fixed
